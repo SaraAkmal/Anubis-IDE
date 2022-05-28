@@ -2,7 +2,7 @@
 #############      this project is part of my graduation project and it intends to make a fully functioned IDE from scratch    ########
 #############      I've borrowed a function (serial_ports()) from a guy in stack overflow whome I can't remember his name, so I gave hime the copyrights of this function, thank you  ########
 
-
+from io import StringIO
 import sys
 import glob
 import serial
@@ -171,16 +171,49 @@ class Widget(QWidget):
         H_splitter.addWidget(Left_hbox_Layout)
         H_splitter.addWidget(Right_hbox_Layout)
         H_splitter.setStretchFactor(1, 1)
-
         # I defined a new splitter to seperate between the upper and lower sides of the window
         V_splitter = QSplitter(Qt.Vertical)
         V_splitter.addWidget(H_splitter)
+
+        # Fast Execution GUI
+        fastExecution_splitter = QSplitter(Qt.Horizontal)
+
+        parametersLabel = QLabel(self)
+        parametersLabel.setText("Enter Parameters Here\nSeperate by comma")
+        V_splitter.addWidget(parametersLabel)
+        self.parametersInput = QLineEdit(self)
+        runFastExecuteBtn = QPushButton("Run Fast Execute")
+        runFastExecuteBtn.clicked.connect(self.FastExecute)
+
+        fastExecution_splitter.addWidget(parametersLabel)
+        fastExecution_splitter.addWidget(self.parametersInput)
+        fastExecution_splitter.addWidget(runFastExecuteBtn)
+
+        V_splitter.addWidget(fastExecution_splitter)
+
         V_splitter.addWidget(text2)
 
         Final_Layout = QHBoxLayout(self)
         Final_Layout.addWidget(V_splitter)
 
         self.setLayout(Final_Layout)
+
+    def FastExecute(self):
+        text2.clear()
+        code = text.toPlainText()
+        functionName = code[4:code.find("(")]
+        parameters = self.parametersInput.text()
+        code += "\n{}({})".format(functionName, parameters)
+        try:
+            codeOut = StringIO()
+            sys.stdout = codeOut
+            exec(code)
+            result = codeOut.getvalue()
+            sys.stdout = sys.__stdout__
+            codeOut.close()
+            text2.append(result)
+        except:
+            text2.append("Unhandled Exception")
 
     # defining a new Slot (takes string) to save the text inside the first text editor
     @pyqtSlot(str)
